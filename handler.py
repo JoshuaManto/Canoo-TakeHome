@@ -1,8 +1,19 @@
 import json
 import pymysql
+import os
+
+# access credentials
+db_name = os.environ.get('DBNAME')
+user = os.environ.get('USER')
+host = os.environ.get('HOST')
+password = os.environ.get('PASS')
+port = os.environ.get('PORT')
 
 
 def hello(event, context):
+
+    print(db_name, user, host, password, port)
+
     body = {
         "message": "Go Serverless v1.0! Your function executed successfully!",
         "input": event
