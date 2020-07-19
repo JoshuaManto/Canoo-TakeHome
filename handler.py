@@ -2,17 +2,68 @@ import json
 import pymysql
 import os
 
-# access credentials
-db_name = os.environ.get('DBNAME')
-user = os.environ.get('USER')
-host = os.environ.get('HOST')
-password = os.environ.get('PASS')
-port = os.environ.get('PORT')
+#Configuration Values
+
+endpoint = 'canoo-test-2.cpgcp7tmn4qn.us-east-2.rds.amazonaws.com'
+username = 'admin'
+password = 'admin123'
+database_name = 'Error_Logs'
+
+#Connection
+try:
+    connection = pymysql.connect(endpoint, user=username, passwd=password, db=database_name)
+    print('****connected to db****')
+except:
+    print('Error in connecting to db')
 
 
-def hello(event, context):
+def getTenMostRecent(event, context):
 
-    print(db_name, user, host, password, port)
+    query = "SELECT error_number, time_stamp FROM Logs ORDER BY time_stamp DESC LIMIT 10"
+
+    cursor = connection.cursor()
+    cursor.execute(query)
+
+    rows = cursor.fetchall()
+
+    # Build the result variable
+    # array of objects
+    # Error code and timestamp only
+    
+    result = []
+    for row in rows:
+        data = {}
+        data['error_code'] = row[0]
+        data['timestamp'] = row[1]
+        # print("{0} {1}".format(row[0], row[1]))
+        result.append(data)
+
+    
+
+    body = {
+        "result": result
+    }
+
+    response = {
+        "statusCode": 200,
+        "body": json.dumps(body)
+    }
+
+    return response
+
+def addLogs(event, context):
+
+    print(event.body)
+
+ 
+
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM Logs')
+
+    rows = cursor.fetchall()
+    for row in rows:
+        print("{0} {1} {2} {3}".format(row[0], row[1], row[2], row[3]))
+
 
     body = {
         "message": "Go Serverless v1.0! Your function executed successfully!",
@@ -26,11 +77,9 @@ def hello(event, context):
 
     return response
 
-    # Use this code if you don't use the http event with the LAMBDA-PROXY
-    # integration
-    """
-    return {
-        "message": "Go Serverless v1.0! Your function executed successfully!",
-        "event": event
-    }
-    """
+
+
+
+if __name__ == '__main__':
+    endpoint = os.environ['HOST']
+    print(endpoint)
