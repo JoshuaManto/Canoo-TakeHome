@@ -9,11 +9,8 @@ username = os.environ['USER']
 password = os.environ['PASS']
 database_name = os.environ['DBNAME']
 
-print(endpoint, username, password, database_name)
-
 #Connection
 try:
-    print(endpoint, username, password, database_name)
     connection = pymysql.connect(endpoint, user=username, passwd=password, db=database_name)
     print('****connected to db****')
 except:
@@ -41,8 +38,6 @@ def getTenMostRecent(event, context):
         # print("{0} {1}".format(row[0], row[1]))
         result.append(data)
 
-    
-
     body = {
         "result": result
     }
@@ -57,45 +52,31 @@ def getTenMostRecent(event, context):
 # POST REQUEST
 def addLogs(event, context):
 
-    # print(event)
-
-    # [{"deviceID": "any_device_token", "err": 107, "timestamp": 1514864773 }]  
-
-    # deviceID = event['deviceID']
-    # err = event['err']
-    # timestamp = event['timestamp']
-
+    # Get payload from event body
+    # Should be an array of objects
     payload = event['payload']
-
-    # print(deviceID, err, timestamp)
-    # print(type(err))
-    # print(type(timestamp))
 
     query = 'INSERT INTO Logs (device_id, error_number, time_stamp) VALUES (%s, %s, %s)'
 
+    # Build data to be inserted to the database
+    # Array of tuples
     data = []
     
     for row in payload:
-        print(row)
         data.append((row['deviceID'], row['err'], row['timestamp']))
 
     cursor = connection.cursor()
 
+    # Handles 1 or more incoming data
     if(len(data) == 1):
-        print('1 data')
+        # print('1 data')
         cursor.execute(query, data[0])
     elif(len(data) > 1):
-        print('2 or more data')
+        # print('2 or more data')
         cursor.executemany(query, data)
 
-    rows = connection.commit()
-    # print('rows: ', rows)
-    # print(cursor)
-    # print(cursor.rowcount)
-
-
     body = {
-        "result": "Success"
+        "result": "Success. {0} number of data inserted".format(cursor.rowcount)
     }
 
     response = {
