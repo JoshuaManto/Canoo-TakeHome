@@ -4,13 +4,16 @@ import os
 
 #Configuration Values
 
-endpoint = 'canoo-test-2.cpgcp7tmn4qn.us-east-2.rds.amazonaws.com'
-username = 'admin'
-password = 'admin123'
-database_name = 'Error_Logs'
+endpoint = os.environ['HOST']
+username = os.environ['USER']
+password = os.environ['PASS']
+database_name = os.environ['DBNAME']
+
+print(endpoint, username, password, database_name)
 
 #Connection
 try:
+    print(endpoint, username, password, database_name)
     connection = pymysql.connect(endpoint, user=username, passwd=password, db=database_name)
     print('****connected to db****')
 except:
@@ -54,29 +57,41 @@ def getTenMostRecent(event, context):
 # POST REQUEST
 def addLogs(event, context):
 
-    print(event)
+    # print(event)
 
     # [{"deviceID": "any_device_token", "err": 107, "timestamp": 1514864773 }]  
 
-    deviceID = event['deviceID']
-    err = event['err']
-    timestamp = event['timestamp']
+    # deviceID = event['deviceID']
+    # err = event['err']
+    # timestamp = event['timestamp']
 
-    print(deviceID, err, timestamp)
-    print(type(err))
-    print(type(timestamp))
+    payload = event['payload']
+
+    # print(deviceID, err, timestamp)
+    # print(type(err))
+    # print(type(timestamp))
 
     query = 'INSERT INTO Logs (device_id, error_number, time_stamp) VALUES (%s, %s, %s)'
 
+    data = []
+    
+    for row in payload:
+        print(row)
+        data.append((row['deviceID'], row['err'], row['timestamp']))
+
     cursor = connection.cursor()
-    cursor.execute(query, (deviceID, err, timestamp))
+
+    if(len(data) == 1):
+        print('1 data')
+        cursor.execute(query, data[0])
+    elif(len(data) > 1):
+        print('2 or more data')
+        cursor.executemany(query, data)
 
     rows = connection.commit()
-    print('rows: ', rows)
-    print(cursor)
-    print(cursor.rowcount)
-    # for row in rows:
-    #     print("{0} {1} {2} {3}".format(row[0], row[1], row[2], row[3]))
+    # print('rows: ', rows)
+    # print(cursor)
+    # print(cursor.rowcount)
 
 
     body = {
