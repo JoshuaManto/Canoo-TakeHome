@@ -16,7 +16,7 @@ try:
 except:
     print('Error in connecting to db')
 
-
+# GET REQUEST
 def getTenMostRecent(event, context):
 
     query = "SELECT error_number, time_stamp FROM Logs ORDER BY time_stamp DESC LIMIT 10"
@@ -51,23 +51,36 @@ def getTenMostRecent(event, context):
 
     return response
 
+# POST REQUEST
 def addLogs(event, context):
 
-    print(event.body)
+    print(event)
 
- 
+    # [{"deviceID": "any_device_token", "err": 107, "timestamp": 1514864773 }]  
+
+    deviceID = event['deviceID']
+    err = event['err']
+    timestamp = event['timestamp']
+
+    print(deviceID, err, timestamp)
+    print(type(err))
+    print(type(timestamp))
+
+    query = 'INSERT INTO Logs (device_id, error_number, time_stamp) VALUES (%s, %s, %s)'
 
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM Logs')
+    cursor.execute(query, (deviceID, err, timestamp))
 
-    rows = cursor.fetchall()
-    for row in rows:
-        print("{0} {1} {2} {3}".format(row[0], row[1], row[2], row[3]))
+    rows = connection.commit()
+    print('rows: ', rows)
+    print(cursor)
+    print(cursor.rowcount)
+    # for row in rows:
+    #     print("{0} {1} {2} {3}".format(row[0], row[1], row[2], row[3]))
 
 
     body = {
-        "message": "Go Serverless v1.0! Your function executed successfully!",
-        "input": event
+        "result": "Success"
     }
 
     response = {
